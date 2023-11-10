@@ -7,27 +7,28 @@ import { CreateUserDto, UpdateUserDto } from '../user.dto';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private readonly repo: Repository<User>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
-  async create(dto: CreateUserDto) {
-    const user = await this.repo.create(dto);
-    return await this.repo.save(user);
+  async create(user: CreateUserDto) {
+    const createdUser = await this.userRepo.create(user);
+    return await this.userRepo.save(createdUser);
   }
 
-  async update(id: number, dto: UpdateUserDto) {
-    return await this.repo.update(id, dto);
+  async update(id: number, user: UpdateUserDto) {
+    await this.userRepo.update(id, user);
+    return this.userRepo.findBy({ id });
   }
 
   async delete(id: number) {
-    return await this.repo.delete(id);
+    await this.userRepo.delete(id);
   }
 
   async findAll() {
-    return await this.repo.find();
+    return await this.userRepo.find();
   }
 
   async findOne(id: number) {
-    return await this.repo.findOne({ where: { id: id } });
+    return await this.userRepo.findOneBy({ id });
   }
 }

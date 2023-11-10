@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { CreateUserDto, UpdateUserDto } from '../user.dto';
@@ -15,27 +16,38 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('all')
-  getAll() {
+  async findAll() {
     return this.userService.findAll();
   }
 
   @Get(':id')
-  getById(@Param('id') id: number) {
-    return this.userService.findOne(id);
+  async findOne(@Param('id') id: number) {
+    const user = await this.userService.findOne(id);
+
+    if (!user) {
+      throw new NotFoundException('User does not exist!');
+    } else {
+      return user;
+    }
   }
 
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.userService.create(dto);
+  async create(@Body() user: CreateUserDto) {
+    return this.userService.create(user);
   }
 
   @Put(':id')
-  update(@Param('id') id: number, @Body() dto: UpdateUserDto) {
-    return this.userService.update(id, dto);
+  async update(@Param('id') id: number, @Body() user: UpdateUserDto) {
+    return this.userService.update(id, user);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: number) {
+  async delete(@Param('id') id: number) {
+    const user = await this.userService.findOne(id);
+
+    if (!user) {
+      throw new NotFoundException('User does not exist!');
+    }
     return this.userService.delete(id);
   }
 }

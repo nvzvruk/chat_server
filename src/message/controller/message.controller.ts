@@ -1,44 +1,18 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { User } from '@/user/user.entity';
 import { MessageService } from '../service/message.service';
-import { MessageDTO } from '../dto/get-message.dto';
 
-@Controller('messages')
+@Controller('message')
 export class MessageController {
   constructor(private readonly messagesService: MessageService) {}
 
   @Post()
-  create(@Body() message: MessageDTO): MessageDTO {
-    return this.messagesService.create(message);
+  create(@Body() { user, text }: { user: User; text: string }) {
+    return this.messagesService.create(text, user);
   }
 
-  @Get()
-  @UseGuards(AuthGuard('jwt'))
-  findAll(): MessageDTO[] {
+  @Get('all')
+  findAll() {
     return this.messagesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: number): MessageDTO {
-    return this.messagesService.findOne(id);
-  }
-
-  @Put(':id')
-  update(@Param('id') id: number, @Body() message: MessageDTO): MessageDTO {
-    return this.messagesService.update(id, message);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: number): void {
-    this.messagesService.remove(id);
   }
 }

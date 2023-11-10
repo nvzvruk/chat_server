@@ -1,5 +1,14 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Message } from '@/message/message.entity';
 
 @Entity()
 export class User {
@@ -14,6 +23,15 @@ export class User {
 
   @Column({ nullable: false })
   password: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @OneToMany(() => Message, (message) => message.id)
+  messages: Message[];
 
   @BeforeInsert()
   async hashPassword() {

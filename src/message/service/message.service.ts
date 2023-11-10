@@ -1,30 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { MessageDTO } from '../dto/get-message.dto';
-import { fakeMessages } from '../fake-data';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '@/user/user.entity';
+import { Message } from '../message.entity';
 
 @Injectable()
 export class MessageService {
-  private readonly messages: MessageDTO[] = fakeMessages;
+  constructor(
+    @InjectRepository(Message)
+    private messageRepo: Repository<Message>,
+  ) {}
 
-  create(message: MessageDTO): MessageDTO {
-    this.messages.push(message);
-    return message;
+  // TODO Get user from auth
+  async create(text: string, user: User) {
+    const newMessage = await this.messageRepo.create({
+      text,
+      user,
+    });
+
+    return this.messageRepo.save(newMessage);
   }
 
-  findAll(): MessageDTO[] {
-    return this.messages;
-  }
-
-  findOne(id: number): MessageDTO {
-    return this.messages[id];
-  }
-
-  update(id: number, message: MessageDTO): MessageDTO {
-    this.messages[id] = message;
-    return message;
-  }
-
-  remove(id: number): void {
-    this.messages.splice(id, 1);
+  async findAll() {
+    return await this.messageRepo.find();
   }
 }

@@ -2,6 +2,7 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 import { User } from '@/user/user.entity';
 import { Message } from '@/message/message.entity';
 
+// TODO get from .env
 const config: PostgresConnectionOptions = {
   type: 'postgres',
   database: 'testDB',
