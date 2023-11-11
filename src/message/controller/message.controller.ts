@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { JwtGuard } from '@/auth/guards/jwt-guard';
 import { User } from '@/user/user.entity';
 import { MessageService } from '../service/message.service';
 
@@ -11,6 +12,7 @@ export class MessageController {
     return this.messagesService.create(text, user);
   }
 
+  @UseGuards(JwtGuard)
   @Get('all')
   findAll() {
     return this.messagesService.findAll();
