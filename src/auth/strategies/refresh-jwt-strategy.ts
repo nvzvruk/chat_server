@@ -7,7 +7,11 @@ export class RefreshJwtStrategy extends PassportStrategy(
 ) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromBodyField('refresh'),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request) => {
+          return request.cookies['refresh-token'];
+        },
+      ]),
       ignoreExpiration: false,
       // TODO fix
       secretOrKey: `${process.env.JWT_SECRET}`,

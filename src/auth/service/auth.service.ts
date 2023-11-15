@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '@/user/service/user.service';
 import { User } from '@/user/user.entity';
@@ -22,16 +23,23 @@ export class AuthService {
     return null;
   }
 
-  async login(user: User) {
+  async login(user: User, response: Response) {
     const payload = {
       username: user.name,
       sub: user.id,
     };
 
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    response.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: false,
+    });
+
     return {
       ...user,
-      accessToken: this.jwtService.sign(payload),
-      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
+      accessToken,
     };
   }
 
