@@ -36,7 +36,7 @@ export class UserService {
     return await this.userRepo.findOneBy({ name: username });
   }
 
-  async updateRefreshToken(id: User['id'], token: string) {
+  async setRefreshToken(id: User['id'], token: string) {
     await this.userRepo.update(id, { refreshToken: token });
   }
 }

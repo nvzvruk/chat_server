@@ -1,5 +1,6 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { JwtPayload } from '../types';
 
 export class RefreshJwtStrategy extends PassportStrategy(
   Strategy,
@@ -12,12 +13,13 @@ export class RefreshJwtStrategy extends PassportStrategy(
           return request.cookies['refresh-token'];
         },
       ]),
+      // passReqToCallback: true,
       ignoreExpiration: false,
       secretOrKey: `${process.env.JWT_SECRET}`,
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     return payload;
   }
 }

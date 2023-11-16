@@ -8,14 +8,11 @@ import {
   Param,
   NotFoundException,
   UseGuards,
-  UseFilters,
 } from '@nestjs/common';
 import { JwtGuard } from '@/auth/guards/jwt-guard';
-import { AuthExceptionFilter } from '@/auth/filters/auth-exception.filter';
 import { UserService } from '../service/user.service';
 import { CreateUserDto, UpdateUserDto } from '../user.dto';
 
-@UseFilters(AuthExceptionFilter)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

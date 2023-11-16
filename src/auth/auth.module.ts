@@ -15,9 +15,10 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule,
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
+      global: true,
+      signOptions: { expiresIn: '5s' },
       // TODO get secret from  process.env.JWT_SECRET, but it is undefined
       secret: `Vit8SWv4pYZT4UWWhS/vFqwfK0e/n5KQIvi2/IEhyFw=`,
-      signOptions: { expiresIn: '3600s' },
     }),
   ],
   controllers: [AuthController],

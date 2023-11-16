@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '@/user/service/user.service';
 import { User } from '@/user/user.entity';
 import { CreateUserDto } from '@/user/user.dto';
+import { JwtPayload } from '../types';
 
 @Injectable()
 export class AuthService {
@@ -12,16 +13,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  generateTokens(user) {
-    const payload = {
-      username: user.name,
-      sub: user.id,
-    };
-
+  getJwtPayload(user: User): JwtPayload {
     return {
-      accessToken: this.jwtService.sign(payload),
-      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
+      sub: user.id,
+      username: user.name,
     };
+  }
+
+  generateAccessToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload);
+  }
+
+  generateRefreshToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload, { expiresIn: '15d' });
   }
 
   async validateUser(username: string, password: string) {
@@ -45,9 +49,17 @@ export class AuthService {
 
     const createdUser = await this.userService.create(userData);
 
-    const { accessToken, refreshToken } = this.generateTokens(createdUser);
+    const accessToken = this.generateAccessToken({
+      username: createdUser.name,
+      sub: createdUser.id,
+    });
 
-    await this.userService.updateRefreshToken(createdUser.id, refreshToken);
+    const refreshToken = this.generateAccessToken({
+      username: createdUser.name,
+      sub: createdUser.id,
+    });
+
+    await this.userService.setRefreshToken(createdUser.id, refreshToken);
 
     return {
       ...createdUser,
@@ -56,9 +68,11 @@ export class AuthService {
   }
 
   async login(user: User) {
-    const { accessToken, refreshToken } = this.generateTokens(user);
+    const jwtPayload = this.getJwtPayload(user);
+    const accessToken = this.generateAccessToken(jwtPayload);
+    const refreshToken = this.generateRefreshToken(jwtPayload);
 
-    await this.userService.updateRefreshToken(user.id, refreshToken);
+    await this.userService.setRefreshToken(user.id, refreshToken);
 
     return {
       ...user,
@@ -66,8 +80,8 @@ export class AuthService {
     };
   }
 
-  async refreshToken(user: User) {
-    const { accessToken } = this.generateTokens(user);
+  async refreshToken(payload: JwtPayload) {
+    const accessToken = this.generateAccessToken(payload);
 
     // TODO Save refresh token in DB or/and Cookie
 
@@ -77,6 +91,6 @@ export class AuthService {
   }
 
   async logout(id: User['id']) {
-    return await this.userService.updateRefreshToken(id, null);
+    return await this.userService.setRefreshToken(id, null);
   }
 }
