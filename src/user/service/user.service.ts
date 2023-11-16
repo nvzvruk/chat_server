@@ -10,17 +10,17 @@ export class UserService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
-  async create(user: CreateUserDto) {
-    const createdUser = await this.userRepo.create(user);
+  async create(userData: CreateUserDto) {
+    const createdUser = await this.userRepo.create(userData);
     return await this.userRepo.save(createdUser);
   }
 
-  async update(id: number, user: UpdateUserDto) {
-    await this.userRepo.update(id, user);
-    return this.userRepo.findBy({ id });
+  async update(id: User['id'], userData: UpdateUserDto) {
+    await this.userRepo.update(id, userData);
+    return await this.userRepo.findOneBy({ id });
   }
 
-  async delete(id: number) {
+  async delete(id: User['id']) {
     await this.userRepo.delete(id);
   }
 
@@ -28,11 +28,15 @@ export class UserService {
     return await this.userRepo.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: User['id']) {
     return await this.userRepo.findOneBy({ id });
   }
 
   async findByUsername(username: string) {
     return await this.userRepo.findOneBy({ name: username });
+  }
+
+  async updateRefreshToken(id: User['id'], token: string) {
+    await this.userRepo.update(id, { refreshToken: token });
   }
 }

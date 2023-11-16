@@ -11,7 +11,7 @@ export class AuthExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
 
-    console.log('Catch UnauthorizedException');
+    // TODO Apply or delete this filter
 
     response.status(401).json({
       statusCode: 401,

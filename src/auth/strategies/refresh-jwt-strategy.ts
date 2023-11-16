@@ -13,7 +13,6 @@ export class RefreshJwtStrategy extends PassportStrategy(
         },
       ]),
       ignoreExpiration: false,
-      // TODO fix
       secretOrKey: `${process.env.JWT_SECRET}`,
     });
   }
