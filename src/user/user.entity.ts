@@ -15,7 +15,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // TODO Save hash, not original token
+  // TODO Save tokens in Session table
   @Column({ unique: true, nullable: true })
   refreshToken: string;
 

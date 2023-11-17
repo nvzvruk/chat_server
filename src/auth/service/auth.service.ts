@@ -13,21 +13,6 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  getJwtPayload(user: User): JwtPayload {
-    return {
-      sub: user.id,
-      username: user.name,
-    };
-  }
-
-  generateAccessToken(payload: JwtPayload) {
-    return this.jwtService.sign(payload);
-  }
-
-  generateRefreshToken(payload: JwtPayload) {
-    return this.jwtService.sign(payload, { expiresIn: '15d' });
-  }
-
   async validateUser(username: string, password: string) {
     const user = await this.userService.findByUsername(username);
 
@@ -68,9 +53,14 @@ export class AuthService {
   }
 
   async login(user: User) {
-    const jwtPayload = this.getJwtPayload(user);
-    const accessToken = this.generateAccessToken(jwtPayload);
-    const refreshToken = this.generateRefreshToken(jwtPayload);
+    const accessToken = this.generateAccessToken({
+      sub: user.id,
+      username: user.name,
+    });
+    const refreshToken = this.generateRefreshToken({
+      sub: user.id,
+      username: user.name,
+    });
 
     await this.userService.setRefreshToken(user.id, refreshToken);
 
@@ -80,17 +70,24 @@ export class AuthService {
     };
   }
 
-  async refreshToken(payload: JwtPayload) {
-    const accessToken = this.generateAccessToken(payload);
-
-    // TODO Save refresh token in DB or/and Cookie
-
-    return {
-      accessToken,
-    };
-  }
-
   async logout(id: User['id']) {
     return await this.userService.setRefreshToken(id, null);
+  }
+
+  generateAccessToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+    });
+  }
+
+  generateRefreshToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,
+    });
+  }
+
+  getCookieWithJwtRefreshToken(id: User['id'], name: string) {
+    const token = this.generateAccessToken({ sub: id, username: name });
+    return `refresh_token=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME}`;
   }
 }

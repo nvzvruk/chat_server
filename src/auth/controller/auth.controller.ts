@@ -1,4 +1,11 @@
-import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Request,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { CreateUserDto } from '@/user/user.dto';
 import { LocalGuard } from '@/auth/guards/local-guard';
@@ -16,20 +23,28 @@ export class AuthController {
 
   @UseGuards(LocalGuard)
   @Post('login')
-  async signIn(@Request() request) {
+  async login(@Request() request) {
+    const { id, name } = request.user;
+    const refreshJwtCookie = this.authService.getCookieWithJwtRefreshToken(
+      id,
+      name,
+    );
+
+    request.res.setHeader('Set-Cookie', refreshJwtCookie);
     return await this.authService.login(request.user);
   }
 
   @UseGuards(JwtGuard)
   @Post('logout')
-  async logout(@Request() request) {
-    return await this.authService.logout(request.user.id);
+  async logout(@Request() request, @Res({ passthrough: true }) response) {
+    response.clearCookie('refresh_token');
+    return await this.authService.logout(request.user.sub);
   }
 
   @UseGuards(RefreshJwtGuard)
   @Post('refresh')
   async refreshToken(@Request() request) {
-    const { id, name } = request.user;
-    return this.authService.refreshToken({ sub: id, username: name });
+    const { sub, username } = request.user;
+    return this.authService.generateAccessToken({ sub, username });
   }
 }
