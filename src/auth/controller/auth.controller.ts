@@ -17,27 +17,34 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  async registerUser(@Body() userData: CreateUserDto) {
-    return await this.authService.signUp(userData);
+  async registerUser(
+    @Body() userData: CreateUserDto,
+    @Res({ passthrough: true }) response,
+  ) {
+    const { refreshCookie, ...user } = await this.authService.signUp(userData);
+
+    response.setHeader('Set-Cookie', refreshCookie);
+
+    return user;
   }
 
   @UseGuards(LocalGuard)
   @Post('login')
-  async login(@Request() request) {
-    const { id, name } = request.user;
-    const refreshJwtCookie = this.authService.getCookieWithJwtRefreshToken(
-      id,
-      name,
+  async login(@Request() request, @Res({ passthrough: true }) response) {
+    const { refreshCookie, ...user } = await this.authService.login(
+      request.user,
     );
 
-    request.res.setHeader('Set-Cookie', refreshJwtCookie);
-    return await this.authService.login(request.user);
+    response.setHeader('Set-Cookie', refreshCookie);
+
+    return user;
   }
 
   @UseGuards(JwtGuard)
   @Post('logout')
   async logout(@Request() request, @Res({ passthrough: true }) response) {
     response.clearCookie('refresh_token');
+
     return await this.authService.logout(request.user.sub);
   }
 
@@ -45,6 +52,6 @@ export class AuthController {
   @Post('refresh')
   async refreshToken(@Request() request) {
     const { sub, username } = request.user;
-    return this.authService.generateAccessToken({ sub, username });
+    return await this.authService.generateAccessToken({ sub, username });
   }
 }

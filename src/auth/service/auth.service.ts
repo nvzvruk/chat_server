@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '@/user/service/user.service';
 import { User } from '@/user/user.entity';
 import { CreateUserDto } from '@/user/user.dto';
-import { JwtPayload } from '../types';
+import { AuthError, JwtPayload } from '../types';
 
 @Injectable()
 export class AuthService {
@@ -25,69 +25,50 @@ export class AuthService {
     return null;
   }
 
-  async signUp(userData: CreateUserDto) {
-    const existingUser = await this.userService.findByUsername(userData.name);
-
-    if (existingUser) {
-      throw new ConflictException('Username already exists');
-    }
-
-    const createdUser = await this.userService.create(userData);
-
-    const accessToken = this.generateAccessToken({
-      username: createdUser.name,
-      sub: createdUser.id,
+  async generateAccessToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
     });
-
-    const refreshToken = this.generateAccessToken({
-      username: createdUser.name,
-      sub: createdUser.id,
-    });
-
-    await this.userService.setRefreshToken(createdUser.id, refreshToken);
-
-    return {
-      ...createdUser,
-      accessToken,
-    };
   }
 
   async login(user: User) {
-    const accessToken = this.generateAccessToken({
+    const payload = {
       sub: user.id,
       username: user.name,
+    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
     });
-    const refreshToken = this.generateRefreshToken({
-      sub: user.id,
-      username: user.name,
+
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,
     });
+
+    const refreshCookie = `refresh_token=${refreshToken}; HttpOnly; Path=/; Max-Age=${process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME}`;
 
     await this.userService.setRefreshToken(user.id, refreshToken);
 
     return {
       ...user,
       accessToken,
+      refreshCookie,
     };
+  }
+
+  async signUp(userData: CreateUserDto) {
+    const existingUser = await this.userService.findByUsername(userData.name);
+
+    if (existingUser) {
+      throw new ConflictException(AuthError.UserWithSuchNameExists);
+    }
+
+    const createdUser = await this.userService.create(userData);
+
+    return await this.login(createdUser);
   }
 
   async logout(id: User['id']) {
     return await this.userService.setRefreshToken(id, null);
-  }
-
-  generateAccessToken(payload: JwtPayload) {
-    return this.jwtService.sign(payload, {
-      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
-    });
-  }
-
-  generateRefreshToken(payload: JwtPayload) {
-    return this.jwtService.sign(payload, {
-      expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,
-    });
-  }
-
-  getCookieWithJwtRefreshToken(id: User['id'], name: string) {
-    const token = this.generateAccessToken({ sub: id, username: name });
-    return `refresh_token=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME}`;
   }
 }

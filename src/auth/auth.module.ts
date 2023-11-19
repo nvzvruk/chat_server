@@ -8,11 +8,9 @@ import { AuthController } from './controller/auth.controller';
 import { LocalStrategy } from './strategies/local-strategy';
 import { JwtStrategy } from './strategies/jwt-strategy';
 import { RefreshJwtStrategy } from './strategies/refresh-jwt-strategy';
-import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    ConfigModule,
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       global: true,
