@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '@/user/user.entity';
 import { Message } from '../message.entity';
 
 @Injectable()
@@ -11,17 +10,41 @@ export class MessageService {
     private messageRepo: Repository<Message>,
   ) {}
 
-  // TODO Get user from auth
-  async create(text: string, user: User) {
+  messageToDto(message: Message) {
+    const { user, ...restMessage } = message;
+
+    return {
+      ...restMessage,
+      sender: {
+        id: user.id,
+        name: user.name,
+      },
+    };
+  }
+
+  async create(text: string, userId: number) {
     const newMessage = await this.messageRepo.create({
       text,
-      user,
+      user: { id: userId },
     });
 
     return this.messageRepo.save(newMessage);
   }
 
+  async findOne(id: number) {
+    const message = await this.messageRepo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    return this.messageToDto(message);
+  }
+
   async findAll() {
-    return await this.messageRepo.find();
+    const data = await this.messageRepo.find({
+      relations: ['user'],
+    });
+
+    return data.map(this.messageToDto);
   }
 }

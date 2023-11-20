@@ -3,7 +3,7 @@ import { User } from '@/user/user.entity';
 import { Message } from '@/message/message.entity';
 
 // TODO get from .env
-const config: PostgresConnectionOptions = {
+export const ormconfig: PostgresConnectionOptions = {
   type: 'postgres',
   database: 'testDB',
   host: 'localhost',
@@ -13,5 +13,3 @@ const config: PostgresConnectionOptions = {
   entities: [User, Message],
   synchronize: true,
 };
-
-export default config;

@@ -1,15 +1,22 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JwtGuard } from '@/auth/guards/jwt-guard';
-import { User } from '@/user/user.entity';
 import { MessageService } from '../service/message.service';
 
 @Controller('message')
 export class MessageController {
   constructor(private readonly messagesService: MessageService) {}
 
+  @UseGuards(JwtGuard)
   @Post()
-  create(@Body() { user, text }: { user: User; text: string }) {
-    return this.messagesService.create(text, user);
+  async create(@Request() request, @Body() { text }) {
+    return this.messagesService.create(text, request.user.sub);
   }
 
   @UseGuards(JwtGuard)

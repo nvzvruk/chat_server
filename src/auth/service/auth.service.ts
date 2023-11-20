@@ -18,7 +18,7 @@ export class AuthService {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, refreshToken, ...restUser } = user;
+      const { password, ...restUser } = user;
       return restUser;
     }
 
@@ -47,8 +47,6 @@ export class AuthService {
 
     const refreshCookie = `refresh_token=${refreshToken}; HttpOnly; Path=/; Max-Age=${process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME}`;
 
-    await this.userService.setRefreshToken(user.id, refreshToken);
-
     return {
       ...user,
       accessToken,
@@ -66,9 +64,5 @@ export class AuthService {
     const createdUser = await this.userService.create(userData);
 
     return await this.login(createdUser);
-  }
-
-  async logout(id: User['id']) {
-    return await this.userService.setRefreshToken(id, null);
   }
 }

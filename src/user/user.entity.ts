@@ -15,10 +15,6 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // TODO Save tokens in Session table
-  @Column({ unique: true, nullable: true })
-  refreshToken: string;
-
   @Column({ unique: true, nullable: false })
   name: string;
 
