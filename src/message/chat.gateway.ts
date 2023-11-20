@@ -25,13 +25,11 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('send_message')
-  async listenForMessages(
-    @MessageBody() { text, userId },
-    @ConnectedSocket() socket: Socket,
-  ) {
+  async listenForMessages(@MessageBody() { text, userId }) {
+    // TODO Research about get id from cookie etc.
     const { id } = await this.messageService.create(text, userId);
     const message = await this.messageService.findOne(id);
-    socket.emit('receive_message', message);
+    this.server.emit('receive_message', message);
     return message;
   }
 
