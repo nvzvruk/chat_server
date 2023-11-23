@@ -5,6 +5,7 @@ import {
   Body,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { JwtGuard } from '@/auth/guards/jwt-guard';
 import { MessageService } from '../service/message.service';
@@ -20,8 +21,11 @@ export class MessageController {
   }
 
   @UseGuards(JwtGuard)
-  @Get('all')
-  findAll() {
-    return this.messagesService.findAll();
+  @Get('history')
+  findPaginated(
+    @Query('pageNumber') pageNumber = 1,
+    @Query('pageSize') pageSize = 20,
+  ) {
+    return this.messagesService.findPaginated({ pageNumber, pageSize });
   }
 }

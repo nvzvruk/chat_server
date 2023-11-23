@@ -40,11 +40,24 @@ export class MessageService {
     return this.messageToDto(message);
   }
 
-  async findAll() {
+  async findPaginated({ pageNumber, pageSize }) {
+    const skipCount = (pageNumber - 1) * pageSize;
+
     const data = await this.messageRepo.find({
+      skip: pageNumber === 1 ? 0 : skipCount,
+      take: pageSize,
       relations: ['user'],
+      order: {
+        createdAt: 'DESC',
+      },
     });
 
-    return data.map(this.messageToDto);
+    const totalCount = await this.messageRepo.count();
+
+    return {
+      totalCount,
+      hasNext: totalCount - skipCount > pageSize,
+      messages: data.reverse().map(this.messageToDto),
+    };
   }
 }
